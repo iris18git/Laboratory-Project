@@ -1,1 +1,1 @@
-# Laboratoty-Project
+# Laboratory-Project
