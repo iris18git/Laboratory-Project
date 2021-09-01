@@ -1,7 +1,7 @@
 import cv2
 import time
 import math
-from HandTrackingModule import HandDetector
+from handRecognition.HandTrackingModule import HandDetector
 import djitellopy as tello
 
 
