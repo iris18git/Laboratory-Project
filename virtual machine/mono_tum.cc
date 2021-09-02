@@ -138,10 +138,7 @@ int main(int argc, char **argv)
         vTimesTrack.push_back(ttrack);
     }
 
-
-    
-    cout<<"hii"<<endl;
-    
+    cout<<"hii"<<endl; 
     // Stop all threads
     SLAM.Shutdown();
     saveMap(SLAM);
