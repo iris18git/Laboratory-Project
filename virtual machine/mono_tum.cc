@@ -31,7 +31,7 @@
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
-void saveMap(ORB_SLAM2::System &SLAM){
+void saveMap(ORB_SLAM2::System &SLAM){ //save map fuction that saves csv file of data points to /tmp
     std::vector<ORB_SLAM2::MapPoint*> mapPoints = SLAM.GetMap()->GetAllMapPoints();
     std::ofstream pointData;
     pointData.open("/tmp/pointData.csv");
@@ -46,9 +46,9 @@ void saveMap(ORB_SLAM2::System &SLAM){
     pointData.close();
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv) //main function
 {
-    if(argc != 4)
+    if(argc != 4) //program should get following arguments - vocabulary file path for orbslam, yaml configuration file path, and imgs directory path
     {
         cerr << endl << "Usage: ./mono_tum path_to_vocabulary path_to_settings path_to_image_folder" << endl;
         return 1;
@@ -61,49 +61,47 @@ int main(int argc, char **argv)
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
     //vTimesTrack.resize(nImages);
-    
-    
+
+
     bool x = false;
     int c;
-    
-    while(!x) {
+
+    while(!x) { //wait for (o)"k" signal to start orb slam, should be given by user after drone starts taking pics and putting them in imgs folder
     	c = getchar();
     	if (c == int('k')){
     		x = true;
     	}
-    } 
+    }
 
     cout << endl << "-------" << endl;
     cout << "Start processing sequence ..." << endl;
 
     // Main loop
     cv::Mat im;
-   
+
    int timeStamps = 0;
    int counter = 0;
-   for(;counter<=10;timeStamps++){
+   for(;counter<=10;timeStamps++){ //loop runs until there where ten times in a row with no new photos in imgs folder
         string path_name = argv[3];
 
         //--- filenames are unique so we can use a set
         set<fs::path> sorted_by_name;
 
-        for (auto &entry : fs::directory_iterator(path_name))
+        for (auto &entry : fs::directory_iterator(path_name)) // sorted set of images in imgs folder
             sorted_by_name.insert(entry.path());
-	
+
 	cout<<sorted_by_name.size()<<endl;
-	if(sorted_by_name.size()==2){
+	if(sorted_by_name.size()==2){ // check if imgs folder has no new img (still only 2 imgs in folder which we don't delete)
 		counter++;
 	}
 	else{
 		counter=0;
 	}
-	
-        auto img = ++sorted_by_name.rbegin();
-        
-        
-        //delete all element until img
-	
 
+        auto img = ++sorted_by_name.rbegin(); //get second to last img
+
+
+        //delete all element until second to last img (so it will be live)
         for (auto it = begin (sorted_by_name); (*it).c_str() != (*img).c_str(); ++it) {
         	cout << "delete " << (*it).c_str() << " ---------- until: " << (*img).c_str() << endl;
             remove((*it).c_str());
@@ -117,14 +115,16 @@ int main(int argc, char **argv)
             cerr << endl << "Failed to load image" << endl;
             break;
         }
-        
+
+        //now we will pass img to slam
+
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 #else
         std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
 #endif
 
-        // Pass the image to the SLAM system
+        // Pass the image to the SLAM system - track monocular function for point mapping
         SLAM.TrackMonocular(im,tframe);
 
 #ifdef COMPILEDWITHC11
@@ -138,10 +138,10 @@ int main(int argc, char **argv)
         vTimesTrack.push_back(ttrack);
     }
 
-    cout<<"hii"<<endl; 
+    cout<<"hii"<<endl;
     // Stop all threads
     SLAM.Shutdown();
-    saveMap(SLAM);
+    saveMap(SLAM); //saving map
 
     // Tracking time statistics
     sort(vTimesTrack.begin(),vTimesTrack.end());
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
     cout << "median tracking time: " << vTimesTrack[vTimesTrack.size()/2] << endl;
     cout << "mean tracking time: " << totaltime/vTimesTrack.size() << endl;
 
-    // Save camera trajectory
+    // Save camera trajectory - we will use this file to understand the drone's position
     SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
 
     return 0;
