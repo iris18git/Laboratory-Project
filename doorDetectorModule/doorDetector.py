@@ -3,10 +3,12 @@ import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 import pandas as pd
 
-
+# modlule for handling door detection
 class DoorDetector:
     def __init__(self, point_map_path):
         points = pd.read_csv(point_map_path)
+
+        # set member values of point map dots
         self.x = points[(points.columns)[0]].values
         self.y = points[(points.columns)[1]].values
         self.z = points[(points.columns)[2]].values
@@ -14,7 +16,8 @@ class DoorDetector:
         self.points_3d = np.array(list(zip(self.x, self.y, self.z)))
         self.points_2d = np.array(list(zip(self.x, self.y)))
 
-
+    # draw_distribution_map = True for graph information plotting
+    # function return estimated door location based on gaussian distribution
     def find_door_coordinates(self, draw_distribtion_map=False):
         # Sample parameters
         mu = np.mean(self.points_2d, axis=0)

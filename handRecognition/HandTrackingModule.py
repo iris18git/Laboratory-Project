@@ -1,10 +1,11 @@
 import cv2
 import mediapipe as mp
 
-
+# module for hand detection algorithm
 class HandDetector():
     def __init__(self, static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5,
                  min_tracking_confidence=0.5):
+        # set memeber values
         self.mode = static_image_mode
         self.maxHands = max_num_hands
         self.detectionCon = min_detection_confidence
@@ -17,6 +18,7 @@ class HandDetector():
         self.mpDraw = mp.solutions.drawing_utils
         self.results = None
 
+    # gets image and returns the image with highlighted hands if draw=True. Additionally update results
     def find_hands(self, img, draw=True):
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.results = self.hands.process(img_rgb)
@@ -29,6 +31,7 @@ class HandDetector():
 
         return img
 
+    # gets image and based on self.results returns list of fingers. hand argument is in charge of num hands to detect
     def find_position(self, img, hand=0):
         lm_list = []
 
@@ -44,6 +47,7 @@ class HandDetector():
             return lm_list
         return None
 
+    # returns depth of specific id index from lmbList of specified hand/
     def find_depth(self, id, hand=0):
         if id > 20:
             print("id out of range")

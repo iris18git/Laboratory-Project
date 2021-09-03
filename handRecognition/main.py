@@ -4,11 +4,11 @@ import math
 from handRecognition.HandTrackingModule import HandDetector
 import djitellopy as tello
 
-
+# throwaway func, called when nothing is to do once slidebar is updated.
 def nothing(x):
     pass
 
-
+# class in charge of drone movement
 class Drone:
     def __init__(self, drone, mv_speed, yaw_speed):
         self.tello = drone
@@ -22,12 +22,15 @@ class Drone:
         self.up_down_velocity = 0
         self.yaw_velocity = 0
 
+        # attribute if you want to maually disable drone movement
         self.send_rc_control = True
 
+    # return image from drone
     def get_image(self):
         img = self.tello.get_frame_read().frame
         return img
 
+    # func is called every cycle, sends movement command to drone based on input and state
     def update(self, mv_angle, depth, yaw_angle):
         if mv_angle:
             self.left_right_velocity = int(math.cos(mv_angle) * self.mv_speed)
@@ -50,6 +53,7 @@ class Drone:
             self.tello.send_rc_control(self.left_right_velocity, self.for_back_velocity,
                                        self.up_down_velocity, self.yaw_velocity)
 
+    # called when speed sidebar is updated. handles update
     def update_speed(self, _, yaw_speed=None, depth_speed=None, mv_speed=None):
         try:
             if yaw_speed:
@@ -69,6 +73,7 @@ class Drone:
         except:
             pass
 
+    # called when flight state is updated. handles update.
     def update_state(self, _):
         if cv2.getTrackbarPos('takeoff', 'image') == 1:
             print("takeoff")
@@ -77,11 +82,16 @@ class Drone:
             print("land")
             self.tello.land()
 
+    # main func for drone management, main loop:
     def run(self):
+        # tracking fps variables
         p_time = 0
         c_time = 0
+
+        # object responsible for hand detection calculations
         detector = HandDetector(min_tracking_confidence=0.5, min_detection_confidence=0.5, max_num_hands=1, static_image_mode=False)
 
+        # initiallize connection with drone
         self.tello.connect()
         self.tello.streamon()
         self.update_speed(0, mv_speed=self.mv_speed, yaw_speed=self.yaw_speed)
@@ -130,7 +140,7 @@ class Drone:
         self.tello.streamoff()
         print("end of session")
 
-
+# gets list if limbs and returns in radians angle of index finger relative to palm
 def find_angle(lm_list):
     if lm_list is not None:
         return math.atan2(lm_list[0][2] - lm_list[8][2], lm_list[8][1] - lm_list[0][1])
