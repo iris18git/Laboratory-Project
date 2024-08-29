@@ -1,11 +1,33 @@
-from scipy.spatial.transform import Rotation as R
-from doorDetectorModule.doorDetector import DoorDetector
+from doorDetector import DoorDetector
 import math
 from djitellopy import Tello
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+
+# func taken from the nice dudes on intewebes
+def euler_from_quaternion(x, y, z, w):
+    """
+    Convert a quaternion into euler angles (roll, pitch, yaw)
+    roll is rotation around x in radians (counterclockwise)
+    pitch is rotation around y in radians (counterclockwise)
+    yaw is rotation around z in radians (counterclockwise)
+    """
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    roll_x = math.atan2(t0, t1)
+
+    t2 = +2.0 * (w * y - z * x)
+    t2 = +1.0 if t2 > +1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    pitch_y = math.asin(t2)
+
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    yaw_z = math.atan2(t3, t4)
+
+    return roll_x, pitch_y, yaw_z  # in radian
 
 # path_to_point_map - path to the csv containing the point map generated.
 # path_to_tello_location - path to the txt file of keyFrameTrajectory.
@@ -25,10 +47,9 @@ def main(path_to_point_map, path_to_tello_location):
 
     pos = np.array(loc[1:4]).astype(np.float32)
     print(f'our pos {pos} vs door pos {door}')
-    quaternion = loc[4:]
-    quaternion = R.from_quat(quaternion)
-    angles = quaternion.as_rotvec()
-    curr_angle = angles[0]
+    quaternion = np.array(loc[4:], dtype=float)
+    angles = euler_from_quaternion(quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+    curr_angle = angles[2]
     wanted_angle = math.atan2((door[1]-pos[1]),(door[0]-pos[0]))
     dist = math.dist(pos[:1], door[:1])
 
@@ -62,4 +83,4 @@ def main(path_to_point_map, path_to_tello_location):
 
 
 if __name__ == '__main__':
-    main('pointData0.csv', 'KeyFrameTrajectory.txt')
+    main('pointData.csv', 'KeyFrameTrajectory.txt')

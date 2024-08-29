@@ -1,7 +1,7 @@
 import cv2
 import time
 import math
-from handRecognition.HandTrackingModule import HandDetector
+import HandTrackingModule.py
 import djitellopy as tello
 
 # throwaway func, called when nothing is to do once slidebar is updated.
